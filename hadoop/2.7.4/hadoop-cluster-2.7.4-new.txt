@@ -15,7 +15,7 @@ ZKFC: Zookeeper Failover Controller
 JN: JournalNode
 RM: YARN ResourceManager
 DM: DataManager
-_______________________________________
+ ______________________________________
 |        | NN| DN| ZK| ZKFC| JN| RM| DM|
 |--------------------------------------|
 |hadoop00| √ |   | √ |  √  |   | √ |   |
