@@ -1,0 +1,254 @@
+一、准备六台机器：
+192.168.56.200 hadoop00
+192.168.56.201 hadoop01
+192.168.56.202 hadoop02
+192.168.56.203 hadoop03
+192.168.56.204 hadoop04
+192.168.56.205 hadoop05
+
+节点部署规划：
+节点缩写: 
+NN: NameNode
+DN: DataNode
+ZK: Zookeeper
+ZKFC: Zookeeper Failover Controller
+JN: JournalNode
+RM: YARN ResourceManager
+DM: DataManager
+_______________________________________
+        | NN| DN| ZK| ZKFC| JN| RM| DM|
+---------------------------------------
+hadoop00| √ |   | √ |  √  |   | √ |   |
+---------------------------------------
+hadoop01| √ |   | √ |  √  |   |   |   |
+---------------------------------------
+hadoop02|   | √ | √ |     | √ |   | √ |
+--------------------------------------- 
+hadoop03|   | √ | √ |     | √ |   | √ |
+---------------------------------------
+hadoop04|   | √ | √ |     | √ |   | √ |
+---------------------------------------
+hadoop05|   | √ |   |     |   |   | √ |
+ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ
+
+准备：
+1、修改6台机器的hosts
+vi /etc/hosts
+192.168.56.200 hadoop00
+192.168.56.201 hadoop01
+192.168.56.202 hadoop02
+192.168.56.203 hadoop03
+192.168.56.204 hadoop04
+192.168.56.205 hadoop05
+
+2、开放防火墙：
+firewall-cmd --zone=public --add-port=8020/tcp --permanent
+firewall-cmd --zone=public --add-port=8030/tcp --permanent
+firewall-cmd --zone=public --add-port=8031/tcp --permanent
+firewall-cmd --zone=public --add-port=8032/tcp --permanent
+firewall-cmd --zone=public --add-port=8033/tcp --permanent
+firewall-cmd --zone=public --add-port=8088/tcp --permanent
+firewall-cmd --zone=public --add-port=8090/tcp --permanent
+firewall-cmd --zone=public --add-port=8480/tcp --permanent
+firewall-cmd --zone=public --add-port=8485/tcp --permanent
+firewall-cmd --zone=public --add-port=9000/tcp --permanent
+firewall-cmd --zone=public --add-port=49001/tcp --permanent
+firewall-cmd --zone=public --add-port=50010/tcp --permanent
+firewall-cmd --zone=public --add-port=50020/tcp --permanent
+firewall-cmd --zone=public --add-port=50070/tcp --permanent
+firewall-cmd --zone=public --add-port=50075/tcp --permanent
+firewall-cmd --reload
+firewall-cmd --permanent --query-port=8020/tcp
+firewall-cmd --permanent --query-port=8030/tcp
+firewall-cmd --permanent --query-port=8031/tcp
+firewall-cmd --permanent --query-port=8032/tcp
+firewall-cmd --permanent --query-port=8033/tcp
+firewall-cmd --permanent --query-port=8088/tcp
+firewall-cmd --permanent --query-port=8090/tcp
+firewall-cmd --permanent --query-port=8480/tcp
+firewall-cmd --permanent --query-port=8485/tcp
+firewall-cmd --permanent --query-port=9000/tcp
+firewall-cmd --permanent --query-port=49001/tcp
+firewall-cmd --permanent --query-port=50010/tcp
+firewall-cmd --permanent --query-port=50020/tcp
+firewall-cmd --permanent --query-port=50070/tcp
+firewall-cmd --permanent --query-port=50075/tcp
+
+1、安装jdk8
+
+2、安装zookeeper cluster
+
+一、安装hadoop
+tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+mkdir -p /home/hadoop
+ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+
+二、配置免密登录：
+在hadoop00上执行：
+#生成公钥私钥
+ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+#将公钥导出为认证的key文件
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+#修改key文件权限
+chmod 0600 ~/.ssh/authorized_keys
+
+#将hadoop00的公钥拷贝到hadoop02上（hadoop00中执行）
+scp ~/.ssh/id_rsa.pub root@hadoop02:~/.ssh/hadoop00_id_rsa.pub
+#在hadoop002上执行（hadoop02里面的authorized_keys文件里面有哪台机器的公钥，哪台机器才能免密码登录到hadoop02）：
+cat ~/.ssh/hadoop00_id_rsa.pub >> ~/.ssh/authorized_keys
+
+三、配置hadoop
+1、/home/hadoop/hadoop2.7/etc/hadoop/hadoop-env.sh
+export JAVA_HOME=/usr/local/jdk1.8.0_144
+
+/home/hadoop/hadoop2.7/etc/hadoop/yarn-env.sh
+export JAVA_HOME=/usr/local/jdk1.8.0_144
+
+/home/hadoop/hadoop2.7/etc/hadoop/mapred-env.sh
+export JAVA_HOME=/usr/local/jdk1.8.0_144
+
+2、/home/hadoop/hadoop2.7/etc/hadoop/hdfs-site.xml
+
+3、/home/hadoop/hadoop2.7/etc/hadoop/core-site.xml
+
+4、/home/hadoop/hadoop2.7/etc/hadoop/slaves
+
+5、
+
+四、安装其他节点
+1、将hadoop-2.7.4.tar.gz拷贝至其他5个节点：
+scp hadoop-2.7.4.tar.gz root@hadoop01:/root
+scp hadoop-2.7.4.tar.gz root@hadoop02:/root
+scp hadoop-2.7.4.tar.gz root@hadoop03:/root
+scp hadoop-2.7.4.tar.gz root@hadoop04:/root
+scp hadoop-2.7.4.tar.gz root@hadoop05:/root
+
+2、解压并创建软链接：
+[root@hadoop00 ~]# ssh hadoop01
+Last login: Thu Nov 23 14:51:56 2017 from 192.168.56.200
+[root@hadoop01 ~]# tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+[root@hadoop01 ~]# mkdir -p /home/hadoop
+[root@hadoop01 ~]# ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+[root@hadoop01 hadoop2.7]# exit
+logout
+Connection to hadoop01 closed.
+
+[root@hadoop00 ~]# ssh hadoop02
+Last login: Thu Nov 23 14:40:21 2017 from 192.168.56.101
+[root@hadoop02 ~]# tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+[root@hadoop02 ~]# mkdir -p /home/hadoop
+[root@hadoop02 ~]# ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+[root@hadoop02 ~]# exit
+logout
+Connection to hadoop02 closed.
+
+[root@hadoop00 ~]# ssh hadoop03
+Last login: Thu Nov 23 14:40:28 2017 from 192.168.56.101
+[root@hadoop03 ~]# tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+[root@hadoop03 ~]# mkdir -p /home/hadoop
+[root@hadoop03 ~]# ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+[root@hadoop03 ~]# exit
+logout
+Connection to hadoop03 closed.
+
+[root@hadoop00 ~]# ssh hadoop04
+Last login: Thu Nov 23 14:40:35 2017 from 192.168.56.101
+[root@hadoop04 ~]# tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+[root@hadoop04 ~]# mkdir -p /home/hadoop
+[root@hadoop04 ~]# ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+[root@hadoop04 ~]# exit
+logout
+Connection to hadoop04 closed.
+
+[root@hadoop00 ~]# ssh hadoop05
+Last login: Thu Nov 23 14:40:43 2017 from 192.168.56.101
+[root@hadoop05 ~]# tar zxf hadoop-2.7.4.tar.gz -C /usr/local
+[root@hadoop05 ~]# mkdir -p /home/hadoop
+[root@hadoop05 ~]# ln -sf /usr/local/hadoop-2.7.4 /home/hadoop/hadoop2.7
+[root@hadoop05 ~]# exit
+logout
+Connection to hadoop05 closed.
+
+3、同步配置文件：
+[root@hadoop00 hadoop]# pwd
+/home/hadoop/hadoop2.7/etc/hadoop
+[root@hadoop00 hadoop]# scp * root@hadoop01:/home/hadoop/hadoop2.7/etc/hadoop/
+[root@hadoop00 hadoop]# scp * root@hadoop02:/home/hadoop/hadoop2.7/etc/hadoop/
+[root@hadoop00 hadoop]# scp * root@hadoop03:/home/hadoop/hadoop2.7/etc/hadoop/
+[root@hadoop00 hadoop]# scp * root@hadoop04:/home/hadoop/hadoop2.7/etc/hadoop/
+[root@hadoop00 hadoop]# scp * root@hadoop05:/home/hadoop/hadoop2.7/etc/hadoop/
+
+五、启动环境：
+1、启动journalNode：
+[root@hadoop00 ~]# ssh hadoop02
+Last login: Thu Nov 23 14:55:11 2017 from 192.168.56.200
+[root@hadoop02 ~]# /home/hadoop/hadoop2.7/sbin/hadoop-daemon.sh start journalnode
+starting journalnode, logging to /usr/local/hadoop-2.7.4/logs/hadoop-root-journalnode-hadoop02.out
+[root@hadoop02 ~]# exit
+logout
+Connection to hadoop02 closed.
+
+[root@hadoop00 ~]# ssh hadoop03
+Last login: Thu Nov 23 14:55:31 2017 from 192.168.56.200
+[root@hadoop03 ~]# /home/hadoop/hadoop2.7/sbin/hadoop-daemon.sh start journalnode
+starting journalnode, logging to /usr/local/hadoop-2.7.4/logs/hadoop-root-journalnode-hadoop03.out
+[root@hadoop03 ~]# exit
+logout
+Connection to hadoop03 closed.
+
+[root@hadoop00 ~]# ssh hadoop04
+Last login: Thu Nov 23 15:05:14 2017 from 192.168.56.200
+[root@hadoop04 ~]# /home/hadoop/hadoop2.7/sbin/hadoop-daemon.sh start journalnode
+starting journalnode, logging to /usr/local/hadoop-2.7.4/logs/hadoop-root-journalnode-hadoop04.out
+[root@hadoop04 ~]# exit
+logout
+Connection to hadoop04 closed.
+
+2、首次启动hdfs格式化，仅在一个NameNode执行初始化，且不启动NameNode
+[root@hadoop00 ~]# /home/hadoop/hadoop2.7/bin/hdfs namenode -format
+......
+17/11/23 02:41:09 INFO common.Storage: Storage directory /opt/hadoop/tmp/dfs/name has been successfully formatted.
+......
+
+3、启动格式化过的NameNode
+[root@hadoop00 ~]# /home/hadoop/hadoop2.7/sbin/hadoop-daemon.sh start namenode
+
+4、在未格式化的NameNode中拷贝格式化的元数据（保持格式化的NameNode在运行中）
+[root@hadoop00 hadoop]# ssh hadoop01
+Last login: Thu Nov 23 15:50:05 2017 from 192.168.56.200
+[root@hadoop01 ~]# /home/hadoop/hadoop2.7/bin/hdfs namenode -bootstrapStandby
+......
+[root@hadoop01 ~]# exit
+logout
+Connection to hadoop01 closed.
+
+5、格式化zkfc（在任意一个NameNode中执行）
+[root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/bin/hdfs zkfc -formatZK
+
+6、启动HDFS
+A、停止所有服务（当前只有HDFS没有MapReduce），在node0上执行
+[root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/sbin/stop-dfs.sh
+B、启动所有服务（当前只有HDFS没有MapReduce），在node0上执行
+[root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/sbin/start-dfs.sh
+
+六、测试：
+1、访问：http://hadoop00:50070
+
+2、访问：http://hadoop01:50070
+
+3、上传文件：
+A：创建目录并上传文件
+[root@hadoop00 ~]# /home/hadoop/hadoop2.7/bin/hdfs dfs -mkdir -p /usr/backup
+[root@hadoop00 ~]# /home/hadoop/hadoop2.7/bin/hdfs dfs -put /root/zookeeper-3.4.10.tar.gz /usr/backup
+
+B：访问上传文件：
+http://hadoop00:50070/explorer.html#/usr/backup
+
+
+
+
+
+
+
+
+

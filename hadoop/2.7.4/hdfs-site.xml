@@ -1,0 +1,92 @@
+<?xml  version="1.0"  encoding="UTF-8"?>
+
+<?xml-stylesheettype="text/xsl"href="configuration.xsl"?>
+
+<!-- Licensed under the Apache License, Version 2.0 (the "License"); you 
+	may not use this file except in compliance with the License. You may obtain 
+	a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless 
+	required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. 
+	See accompanying LICENSE file. -->
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+
+	<!-- 配置命名服务，key格式dfs.nameservices -->
+	<property>
+		<name>dfs.nameservices</name>
+		<value>hdfs-cluster</value>
+	</property>
+
+	<!-- 配置NameNode，key格式dfs.ha.namenodes.[nameservice ID] -->
+	<property>
+		<name>dfs.ha.namenodes.hdfs-cluster</name>
+		<value>nn1,nn2</value>
+	</property>
+
+	<!-- 配置每个NameNode的rpc协议端口，key格式dfs.namenode.rpc-address.[ nameservice ID].[namenode ID] -->
+	<property>
+		<name>dfs.namenode.rpc-address.hdfs-cluster.nn1</name>
+		<value>hadoop00:8020</value>
+	</property>
+
+	<property>
+		<name>dfs.namenode.rpc-address.hdfs-cluster.nn2</name>
+		<value>hadoop01:8020</value>
+	</property>
+
+    <!-- 配置每个NameNode的http协议端口，key格式dfs.namenode.http-address.[ nameservice ID].[namenode ID] -->
+	<property>
+		<name>dfs.namenode.http-address.hdfs-cluster.nn1</name>
+		<value>hadoop00:50070</value>
+	</property>
+
+	<property>
+		<name>dfs.namenode.http-address.hdfs-cluster.nn2</name>
+		<value>hadoop01:50070</value>
+	</property>
+
+	<!-- 配置JournalNode集群的URI，key格式dfs.namenode.shared.edits.dir -->
+	<property>
+		<name>dfs.namenode.shared.edits.dir</name>
+		<value>qjournal://hadoop02:8485;hadoop03:8485;hadoop04:8485/hdfs-cluster</value>
+	</property>
+
+	<!-- 配置客户端连接Active NameNode的Java类，key格dfs.client.failover.proxy.provider.[nameserviceID] -->
+	<property>
+		<name>dfs.client.failover.proxy.provider.hdfs-cluster</name>
+		<value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+	</property>
+
+	<!-- 配置故障隔离方法，key格式dfs.ha.fencing.methods（故障隔离保证原Active NameNode被杀死，不再提供read服务）  -->
+	<property>
+		<name>dfs.ha.fencing.methods</name>
+		<value>sshfence</value>
+	</property>
+
+	<!-- 配置SSH的私钥，key格式dfs.ha.fencing.ssh.private-key-files -->
+	<property>
+		<name>dfs.ha.fencing.ssh.private-key-files</name>
+		<value>/root/.ssh/id_rsa</value>
+	</property>
+
+	<!-- 配置故障隔离方法失败的超时时间，key格式dfs.ha.fencing.ssh.connect-timeout -->
+	<property>
+		<name>dfs.ha.fencing.ssh.connect-timeout</name>
+		<value>30000</value>
+	</property>
+
+	<!-- 配置JournalNode保存元数据的目录，key格式dfs.journalnode.edits.dir -->
+	<property>
+		<name>dfs.journalnode.edits.dir</name>
+		<value>/opt/hadoop/jn/data</value>
+	</property>
+
+	<!-- 配置启用自动故障切换，key格式dfs.ha.automatic-failover.enabled -->
+	<property>
+		<name>dfs.ha.automatic-failover.enabled</name>
+		<value>true</value>
+	</property>
+</configuration>
