@@ -1,0 +1,82 @@
+firewall-cmd --zone=public --add-port=2181/tcp --permanent
+firewall-cmd --zone=public --add-port=2888/tcp --permanent
+firewall-cmd --zone=public --add-port=3888/tcp --permanent
+firewall-cmd --reload
+firewall-cmd --permanent --query-port=2181/tcp
+firewall-cmd --permanent --query-port=2888/tcp
+firewall-cmd --permanent --query-port=3888/tcp
+
+
+wget http://mirror.bit.edu.cn/apache/zookeeper/zookeeper-3.4.10/zookeeper-3.4.10.tar.gz
+
+tar zxf zookeeper-3.4.10.tar.gz -C /usr/local
+mkdir -p /opt/zookeeper
+vi /usr/local/zookeeper-3.4.10/conf/zoo.cfg
+syncLimit=2
+initLimit=5
+maxClientCnxns=600
+dataDir=/opt/zookeeper/data
+dataLogDir=/opt/zookeeper/logs
+clientPort=2181
+server.1=192.168.56.200:2888:3888
+server.2=192.168.56.201:2888:3888
+server.3=192.168.56.202:2888:3888
+server.4=192.168.56.203:2888:3888
+server.5=192.168.56.204:2888:3888
+备注：上述配置中的端口：2888用于节点间通信，3888用于leader选举。
+
+vi /opt/zookeeper/data/myid
+1        #标识该zk server，与zoo.cfg的值对应
+
+vi /etc/systemd/system/zookeeper.service
+[Unit]
+Description=Zookeeper service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/jdk1.8.0_144/bin/java \
+-cp /usr/local/zookeeper-3.4.10/zookeeper-3.4.10.jar:/usr/local/zookeeper-3.4.10/lib/*:/usr/local/zookeeper-3.4.10/src/java/lib/*.jar:/usr/local/zookeeper-3.4.10/conf: \
+-Dcom.sun.management.jmxremote \
+-Dcom.sun.management.jmxremote.local.only=false \
+org.apache.zookeeper.server.quorum.QuorumPeerMain \
+/usr/local/zookeeper-3.4.10/conf/zoo.cfg
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+systemctl enable zookeeper
+systemctl start zookeeper
+systemctl status zookeeper
+
+zkCli.sh -server 127.0.0.1:2181
+
+测试：
+vi /etc/profile
+export ZOOKEEPER_HOME=/usr/local/zookeeper-3.4.10
+export path=$ZOOKEEPER_HOME/bin:$PATH
+
+[root@centos71 conf]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper-3.4.10/bin/../conf/zoo.cfg
+Mode: follower
+
+[root@centos72 bin]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper-3.4.10/bin/../conf/zoo.cfg
+Mode: leader
+
+[root@centos73 bin]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper-3.4.10/bin/../conf/zoo.cfg
+Error contacting service. It is probably not running.
+报错：
+zkServer.sh stop
+zkServer.sh start-foreground #用前台方式启动可以看到启动日志
+根据日志解决后：
+[root@centos73 ~]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper-3.4.10/bin/../conf/zoo.cfg
+Mode: follower
+
+
