@@ -74,9 +74,9 @@ firewall-cmd --permanent --query-port=50020/tcp
 firewall-cmd --permanent --query-port=50070/tcp
 firewall-cmd --permanent --query-port=50075/tcp
 
-1、安装jdk8
+1、安装jdk8并配置JAVA_HOME
 
-2、安装zookeeper cluster
+2、安装zookeeper cluster（参考centos7-zookeeper-install.txt）
 
 一、安装hadoop
 tar zxf hadoop-2.7.4.tar.gz -C /usr/local
@@ -226,15 +226,15 @@ Connection to hadoop01 closed.
 [root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/bin/hdfs zkfc -formatZK
 
 6、启动HDFS
-A、停止所有服务（当前只有HDFS没有MapReduce），在node0上执行
+A、停止所有服务（当前只有HDFS没有MapReduce），在hadoop00上执行
 [root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/sbin/stop-dfs.sh
-B、启动所有服务（当前只有HDFS没有MapReduce），在node0上执行
+B、启动所有服务（当前只有HDFS没有MapReduce），在hadoop00上执行
 [root@hadoop00 hadoop]# /home/hadoop/hadoop2.7/sbin/start-dfs.sh
 
 六、测试：
-1、访问：http://hadoop00:50070
+1、访问：http://hadoop00:50070 (http://192.168.56.200://50070)
 
-2、访问：http://hadoop01:50070
+2、访问：http://hadoop01:50070 (http://192.168.56.201://50070)
 
 3、上传文件：
 A：创建目录并上传文件
@@ -242,7 +242,7 @@ A：创建目录并上传文件
 [root@hadoop00 ~]# /home/hadoop/hadoop2.7/bin/hdfs dfs -put /root/zookeeper-3.4.10.tar.gz /usr/backup
 
 B：访问上传文件：
-http://hadoop00:50070/explorer.html#/usr/backup
+http://hadoop00:50070/explorer.html#/usr/backup (http://192.168.56.200:50070/explorer.html#/usr/backup)
 
 
 
